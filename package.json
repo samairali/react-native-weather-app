@@ -8,6 +8,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@react-native-community/async-storage": "^1.6.1",
     "link": "^0.1.5",
     "react": "16.8.6",
     "react-native": "^0.60.4",

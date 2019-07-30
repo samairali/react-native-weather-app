@@ -1,86 +1,71 @@
-import React , { Component } from 'React';
-import {TextInput , Appbar , Button , AppRegistery} from 'react-native-paper';
-import { DrawerActions , createDrawerNavigator, createAppContainer , AppContainer , createStackNavigator, createBottomTabNavigator } from "react-navigation";
-import {Text , View , StyleSheet} from 'react-native';
-import { openDatabase } from 'react-native-sqlite-storage';
-// import Icon from 'react-native-vector-icons';
-import Icon from 'react-native-vector-icons/FontAwesome';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import Mydrawer from './screens/mydrawer';
-import Notificationscreen from './screens/notificationscreen';
+import React from 'react';
+import {View,Text,Button,ScrollView} from 'react-native';
+import {AppBar, Appbar,TextInput,Card,List} from 'react-native-paper';
 import AsyncStorage from '@react-native-community/async-storage';
 
-
-
-const HomeStack = createStackNavigator({
-  Home : Mydrawer
-},
-{
-  defaultNavigationOptions : () => {
-    return {
-      headerStyle : {backgroundColor : '#f4511e'},
-      title       : 'Tab Navigation Is Amazing',
-    }
-  }
-})
-const NotificationStack = createStackNavigator({
-  Notifications : Notificationscreen
-},
-{
-  defaultNavigationOptions : () => {
-    return {
-      headerStyle : {backgroundColor : '#f4511e'},
-      title       : 'Tab Navigation Is Amazing',
-    }
-  }
-})
-const Mytabnavigator = createBottomTabNavigator({
-  Home : HomeStack,
-  Notifications : NotificationStack,
-},
-{
-  defaultNavigationOptions: ({navigation}) => {
-    return {
-      
-      tabBarIcon : ({tintColor}) => {
-        const {routeName} = navigation.state
-        var myicon
-        if(routeName == 'Home'){
-          myicon = 'md-home'
-        } else if(routeName == 'Notifications'){
-          myicon = 'md-notifications'
-        }
-        return <Ionicons name={myicon} color={tintColor} size={30} />
-      },
-      tabBarOptions : {
-        activeTintColor : 'red',
-        inactiveTineColor : 'red' 
-      }
-    }
-  }
-})
-
-const FullContainer = createAppContainer(Mytabnavigator);
-export default class App extends Component{
+export default class App extends React.Component {
+  id = 0
+  arr = []
   state = {
-    asyncItem : 'loading'
+    text : '',
+    data : [
+      {id : 0 , item : 'loading'}
+    ]
   }
-  storageDataAsync = async () => {
-    try {
-      await AsyncStorage.setItem('my_key', 'Samair Ali')
-      const value = await AsyncStorage.getItem('my_key')
-      this.setState({
-        asyncItem : value
-      })
-    } catch (e) {
-      // saving error
-      console.log(e)
-    }
+  StoreDataAsync = async () => {
+    this.arr.push({id:this.id,item:this.state.text})
+    this.id++
+    await AsyncStorage.setItem('mylist', JSON.stringify(this.arr))
+    console.log('data has been added ')
+    this.setState({
+      data : JSON.parse(await AsyncStorage.getItem('mylist'))
+    })
+  }
+  async componentDidMount(){
+    this.setState({
+      data : JSON.parse(await AsyncStorage.getItem('mylist'))
+    })
+    console.log(this.state.data.map( (m) => m.id ))
+    this.arr = JSON.parse(await AsyncStorage.getItem('mylist')) || ''
+    this.id = this.arr[this.arr.length - 1 ].id + 1
   }
   render(){
-    return(
-      <FullContainer />
-    )
-  }
+    if(this.state.data.length >= 1){
+      renderList = this.state.data.map(  item => {
+        return (
+          
+            <Card key={item.id} style={{margin: 10,}}>
+              <List.Item
+                title = {item.item}
+                description = 'working'
+                right = {props => <List.Icon icon = 'delete' />}
+              />
+            </Card>
+          
+        )
+      } )
+    }else {
+      renderList = <Text>'no product found'</Text>
+    }
+      return(
+        <View style={{marginBottom:0}}>
+          <Appbar.Header>
+            <Appbar.Content
+              title='Todo List'
+            />
+          </Appbar.Header>
+            <Text style={{fontSize: 35,textAlign:'center',margin:10}}>Enter Something</Text>
+            <TextInput 
+              label = 'todo input'
+              value = {this.state.item}
+              onChangeText = {(fitem) => this.setState({text : fitem })}
+            />
+            <Button onPress = {this.StoreDataAsync} title='click me ' />
+          <ScrollView showsVerticalScrollIndicator={false} style={{marginBottom:200,paddingBottom:0,backgroundColor:'#d3d3d3'}}>
+            <View>{renderList}</View>
+          </ScrollView>
+          
+        </View>
+      )
+    }
 }
-// To open and close drawer, use the following helpers to open and cl
